@@ -8,7 +8,7 @@ use YAML;
 use DBI ":sql_types";
 use DBIx::CSSQuery::DB;
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.01';
 
 package DBIx::CSSQuery;
 
@@ -21,33 +21,58 @@ sub new {
     return bless {}, self;
 }
 
-my $self;
+{
+    my $self;
+    sub db {
+        $self = DBIx::CSSQuery->new() if !$self;
+        if (!$self->{db}) {
+            $self->{db} = DBIx::CSSQuery::DB->new();
+        }
 
-sub db {
-    $self = DBIx::CSSQuery->new() if !$self;
-    if (!$self->{db}) {
-        $self->{db} = DBIx::CSSQuery::DB->new();
+        return $self->{db} if !@_;
+        if ($_[0]) {
+            $self->{selector} = $_[0];
+        }
+        return $self;
     }
+}
 
-    return $self->{db} if !@_;
-    if ($_[0]) {
-        $self->{selector} = $_[0];
-    }
-    return $self;
+sub get {
+    my ($index) = args;
+    my $record;
+
+    self->_each(
+        sql_params => {
+            limit => "$index,1"
+        },
+        callback => sub {
+            $record = $_[0]
+        }
+    );
+
+    return $record
 }
 
 sub each {
     my ($cb) = args;
+    self->_each(callback => $cb);
+    return self
+}
+
+sub _each {
+    my %params = args;
+    my $cb = $params{callback};
+    return self unless defined $cb;
 
     my $parsed = _parse_css_selector(self->{selector});
-    (self->{sql}, self->{values}) = _build_select_sql_statement($parsed);
+    my ($sql, $values) = _build_select_sql_statement($parsed, $params{sql_params});
 
     my $dbh = self->{db}->attr("dbh");
 
-    my $sth = $dbh->prepare( self->{sql} );
+    my $sth = $dbh->prepare( $sql );
 
-    for my $i (0 .. $#{self->{values}} ) {
-        my $v = $self->{values}->[$i];
+    for my $i (0 .. $#{$values} ) {
+        my $v = $values->[$i];
         $sth->bind_param($i+1, $v->[0], $v->[1]);
     }
 
@@ -55,10 +80,11 @@ sub each {
     while (my $record = $sth->fetchrow_hashref) {
         $cb->($record);
     }
+    return self;
 }
 
 sub _build_select_sql_statement {
-    my ($parsed) = @_;
+    my ($parsed, $params) = @_;
 
     my $p = $parsed->[0];
 
@@ -74,12 +100,15 @@ sub _build_select_sql_statement {
         my $type = SQL_INTEGER;
         if ($val =~ /^'(.+)'$/) {
             $val = $1;
-            $type = SQL_STRING;
+            $type = SQL_VARCHAR;
         }
         push @values, [$val, SQL_INTEGER];
     }
 
-    return "SELECT * $from $where", \@values;
+    $params = {} if !defined($params);
+    my $limit = defined($params->{limit}) ? " LIMIT $params->{limit}" : "";
+
+    return "SELECT * $from ${where}${limit}", \@values;
 }
 
 sub _parse_css_selector {
@@ -125,18 +154,27 @@ __END__
 
 =head1 NAME
 
-DBIx::CSSQuery - [One line description of module's purpose here]
-
+DBIx::CSSQuery - A Perl DBI extension module to let you fetch data with CSS query syntax.
 
 =head1 VERSION
 
 This document describes DBIx::CSSQuery version 0.0.1
 
-
 =head1 SYNOPSIS
 
     use DBIx::CSSQuery;
 
+    # setup
+    db->attr(dbh => DBI->connect(...));
+
+
+    # fetch all posts and do something with them
+    db("posts")->each(sub {
+        print $_[0]->{body};
+    });
+
+    # fetch one post as a hash
+    my $post = db("posts[id=1]")->get(0);
 
 =head1 DESCRIPTION
 
@@ -147,6 +185,12 @@ This document describes DBIx::CSSQuery version 0.0.1
 =over
 
 =item new()
+
+=item db()
+
+=item get( $index )
+
+=item each()
 
 =back
 
