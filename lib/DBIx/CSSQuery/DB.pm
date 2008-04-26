@@ -21,13 +21,13 @@ sub attr {
 
 =head1 NAME
 
-DBIx::CSSQuery::DB - [One line description of module's purpose here]
+DBIx::CSSQuery::DB - The database backend layer of DBIx::CSSQuery
 
 =head1 SYNOPSIS
 
     use DBIx::CSSQuery::DB;
-
-=head1 DESCRIPTION
+    my $db = DBIx::CSSQuery::DB->new;
+    $db->attr(dbh => DBI->connect());
 
 =head1 INTERFACE
 

@@ -2,7 +2,7 @@ package DBIx::CSSQuery;
 
 use warnings;
 use strict;
-use Carp;
+
 use 5.008000;
 use YAML;
 use DBI ":sql_types";
@@ -179,45 +179,74 @@ This document describes DBIx::CSSQuery version 0.0.1
 =head1 DESCRIPTION
 
 
-=head1 INTERFACE 
+DBIx::CSSQuery is, currently, a proof of concept for what can be done
+with CSS query. For example, here's how you retrieve a collection of
+all records from table "posts":
 
+    db("posts")
+
+Also, here's how to iterate over a collection:
+
+    db("posts")->each(sub {
+        my $item = shift;
+
+        print $item->{body};
+    });
+
+It's also yet-another DBI abstraction layer of Perl module.
+
+=head1 INTERFACE
 
 =over
+
+=item db([ $selector ])
+
+This method is exported to your namespace by default.
+
+If selector is not given, it returns an C<DBIx::CSSQuery::DB>
+object. It is required to set dbh attribute on this object before
+doing queries. Setting dbh is just thiS:
+
+    db->attr( dbh => DBI->connect($dsn) );
+
+Only after this is done, you may pass $selector into C<db>, do some
+query:
+
+    db("posts[id=1]")
+
+At this moment, only very limited selector syntax is
+supported. Conceptually, tags are mapped to table names, attributes
+are mapped to table columns. So previous query is the same as this sql
+query:
+
+    SELECT * FROM posts WHERE id = 1;
+
+At this point, if the column type is string, it needs to be
+single-quoted, like C<posts[subject='hi']>. If it's integer, it must
+not be quoted, like the example above. Hopefully this can be
+automatically detected on the backend so the selector syntax an be
+less strict.
 
 =item new()
 
-=item db()
+Object constructor. However, you should use the exported C<db>
+function instead.
 
 =item get( $index )
 
-=item each()
+Retrieve a single record from the retrieved collection. Returns a hash.
+The value of C<$index> starts from zero.
+
+=item each( $callback )
+
+Iterate over the collection. for each record, C<$callback> is called
+with the record passed in as its first argument.
 
 =back
-
-=head1 DIAGNOSTICS
-
-=over
-
-=item C<< Error message here, perhaps with %s placeholders >>
-
-[Description of error here]
-
-=item C<< Another error message here >>
-
-[Description of error here]
-
-[Et cetera, et cetera]
-
-=back
-
-
-=head1 CONFIGURATION AND ENVIRONMENT
-
-DBIx::CSSQuery requires no configuration files or environment variables.
 
 =head1 DEPENDENCIES
 
-None.
+L<self>, L<Sub::Exporter>
 
 =head1 INCOMPATIBILITIES
 
@@ -230,7 +259,6 @@ No bugs have been reported.
 Please report any bugs or feature requests to
 C<bug-dbix-cssquery@rt.cpan.org>, or through the web interface at
 L<http://rt.cpan.org>.
-
 
 =head1 AUTHOR
 
