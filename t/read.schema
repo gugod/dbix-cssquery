@@ -1,0 +1,2 @@
+CREATE TABLE posts (id, subject, body);
+INSERT INTO posts values (1, "Hello", "Hello World");
