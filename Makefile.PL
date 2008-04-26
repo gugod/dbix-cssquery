@@ -6,6 +6,7 @@ all_from 'lib/DBIx/CSSQuery.pm';
 name 'DBIx-CSSQuery';
 
 requires
+    'DBD::SQLite' => 0,
     'Sub::Exporter' => 0,
     'self' => 0.15,
     'DBI' => 0;

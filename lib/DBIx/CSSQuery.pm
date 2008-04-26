@@ -4,7 +4,6 @@ use warnings;
 use strict;
 
 use 5.008000;
-use YAML;
 use DBI ":sql_types";
 use DBIx::CSSQuery::DB;
 
