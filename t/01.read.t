@@ -6,7 +6,7 @@ use DBI ':sql_types';
 
 use DBIx::CSSQuery 'db';
 
-plan tests => 2;
+plan tests => 4;
 
 my $dbh = DBI->connect("dbi:SQLite:dbname=t/read.sqlite3", "", "");
 
@@ -28,4 +28,18 @@ db("posts[id=1]")->each(
 {
     my ($the_post) = db("posts[id=1]")->get(0);
     is_deeply($the_post, $post);
+}
+
+{
+    is( db("posts")->size, 3);
+
+    my @ids = ();
+    db("posts")->each(
+        sub {
+            my $post = shift;
+            push @ids, $post->{id};
+        }
+    );
+    @ids = sort @ids;
+    is_deeply( [1,2,3], \@ids );
 }

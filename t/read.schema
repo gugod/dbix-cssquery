@@ -1,2 +1,4 @@
 CREATE TABLE posts (id, subject, body);
 INSERT INTO posts values (1, "Hello", "Hello World");
+INSERT INTO posts values (2, "Hello", "Hello, there.");
+INSERT INTO posts values (3, "Re: Hello", "What's up.");

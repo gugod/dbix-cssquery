@@ -52,6 +52,24 @@ sub get {
     return $record
 }
 
+sub size {
+    my $parsed = _parse_css_selector(self->{selector});
+    my ($sql, $values) = _build_select_sql_statement($parsed, {
+        select => "count(*)"
+    });
+    my $dbh = self->{db}->attr("dbh");
+
+    my $sth = $dbh->prepare( $sql );
+    for my $i (0 .. $#{$values} ) {
+        my $v = $values->[$i];
+        $sth->bind_param($i+1, $v->[0], $v->[1]);
+    }
+
+    $sth->execute;
+    my $record = $sth->fetchrow_hashref;
+    return $record->{'count(*)'};
+}
+
 sub each {
     my ($cb) = args;
     self->_each(callback => $cb);
@@ -90,8 +108,9 @@ sub _build_select_sql_statement {
     my @values = ();
 
     my $from  = " FROM $p->{type} ";
-    my $where = " WHERE ";
+    my $where = "";
     if ($p->{attribute} =~ m/ \[ (.+) = (.+) \] /x ) {
+        $where = " WHERE ";
         my $field = $1;
         my $val = $2;
 
@@ -107,7 +126,9 @@ sub _build_select_sql_statement {
     $params = {} if !defined($params);
     my $limit = defined($params->{limit}) ? " LIMIT $params->{limit}" : "";
 
-    return "SELECT * $from ${where}${limit}", \@values;
+    my $select = "SELECT * ";
+    $select = "SELECT $params->{'select'} " if $params->{'select'};
+    return "${select}${from} ${where}${limit}", \@values;
 }
 
 sub _parse_css_selector {
