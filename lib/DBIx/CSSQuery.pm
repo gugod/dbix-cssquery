@@ -78,7 +78,7 @@ sub each {
 sub _each {
     my %params = @args;
     my $cb = $params{callback};
-    return self unless defined $cb;
+    return $self unless defined $cb;
 
     my $parsed = _parse_css_selector($self->{selector});
     my ($sql, $values) = _build_select_sql_statement($parsed, $params{sql_params});
