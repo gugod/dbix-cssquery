@@ -1,11 +1,10 @@
 package DBIx::CSSQuery;
-use common::sense;
+use common::sense 3.0;
+use 5.008;
 use DBI ":sql_types";
 use DBIx::CSSQuery::DB;
 
 our $VERSION = '0.01';
-
-package DBIx::CSSQuery;
 
 use Sub::Exporter -setup => {
     exports => [qw(db)]
@@ -282,6 +281,15 @@ function instead.
 
 Retrieve a single record from the retrieved collection. Returns a hash.
 The value of C<$index> starts from zero.
+
+=item size
+
+Return the total number of records in the current collection.
+
+=item last
+
+Narrow the current collection to contain only the last record. The return
+value is stiall collection that you will need to call 'each' or 'get' the o
 
 =item each( $callback )
 

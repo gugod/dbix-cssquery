@@ -1,5 +1,5 @@
-DBIx::CSSQuery version 0.01
-===========================
+DBIx::CSSQuery
+==============
 
 DBIx::CSSQuery is, currently, a proof of concept for what can be done
 with CSS query. For example, here's how you retrieve a collection of
@@ -33,7 +33,7 @@ To install this module, run the following commands:
 COPYRIGHT AND LICENCE
 =====================
 
-Copyright (C) 2008, Kang-min Liu <gugod@gugod.org>
+Copyright (C) 2008,2009,2010 Kang-min Liu <gugod@gugod.org>
 
 This software is released under the MIT license cited below.
 
