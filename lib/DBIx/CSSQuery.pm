@@ -39,7 +39,7 @@ sub get {
     my ($index) = @args;
     my $record;
 
-    $self->_each(
+    $self->each(
         sql_params => {
             limit => "$index,1"
         },
@@ -69,14 +69,21 @@ sub size {
     return $record->{'count(*)'};
 }
 
-sub each {
-    my ($cb) = @args;
-    $self->_each(callback => $cb);
-    return self
+sub last {
 }
 
-sub _each {
-    my %params = @args;
+sub each {
+    my %params;
+    if (@args == 0) {
+        return $self;
+    }
+    if (ref($args[0]) eq 'CODE') {
+        $params{callback}= $args[0];
+    }
+    else {
+        %params = @args;
+    }
+
     my $cb = $params{callback};
     return $self unless defined $cb;
 
@@ -96,7 +103,8 @@ sub _each {
     while (my $record = $sth->fetchrow_hashref) {
         $cb->($record);
     }
-    return self;
+
+    return $self;
 }
 
 sub _build_select_sql_statement {
