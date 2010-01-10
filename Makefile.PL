@@ -7,7 +7,6 @@ all_from      'lib/DBIx/CSSQuery.pm';
 name 'DBIx-CSSQuery';
 
 requires
-    'common::sense' => '3.0',
     'DBD::SQLite' => 0,
     'Sub::Exporter' => 0,
     'self' => '0.32',

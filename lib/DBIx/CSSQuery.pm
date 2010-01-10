@@ -1,5 +1,5 @@
 package DBIx::CSSQuery;
-use common::sense 3.0;
+use strict;
 use 5.008;
 use DBI ":sql_types";
 use DBIx::CSSQuery::DB;
