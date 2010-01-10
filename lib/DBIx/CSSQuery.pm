@@ -1,9 +1,5 @@
 package DBIx::CSSQuery;
-
-use warnings;
-use strict;
-
-use 5.008000;
+use common::sense;
 use DBI ":sql_types";
 use DBIx::CSSQuery::DB;
 
@@ -36,14 +32,14 @@ use Sub::Exporter -setup => {
 use self;
 
 sub new {
-    return bless {}, self;
+    return bless {}, $self;
 }
 
 sub get {
-    my ($index) = args;
+    my ($index) = @args;
     my $record;
 
-    self->_each(
+    $self->_each(
         sql_params => {
             limit => "$index,1"
         },
@@ -56,11 +52,11 @@ sub get {
 }
 
 sub size {
-    my $parsed = _parse_css_selector(self->{selector});
+    my $parsed = _parse_css_selector($self->{selector});
     my ($sql, $values) = _build_select_sql_statement($parsed, {
         select => "count(*)"
     });
-    my $dbh = self->{db}->attr("dbh");
+    my $dbh = $self->{db}->attr("dbh");
 
     my $sth = $dbh->prepare( $sql );
     for my $i (0 .. $#{$values} ) {
@@ -74,20 +70,20 @@ sub size {
 }
 
 sub each {
-    my ($cb) = args;
-    self->_each(callback => $cb);
+    my ($cb) = @args;
+    $self->_each(callback => $cb);
     return self
 }
 
 sub _each {
-    my %params = args;
+    my %params = @args;
     my $cb = $params{callback};
     return self unless defined $cb;
 
-    my $parsed = _parse_css_selector(self->{selector});
+    my $parsed = _parse_css_selector($self->{selector});
     my ($sql, $values) = _build_select_sql_statement($parsed, $params{sql_params});
 
-    my $dbh = self->{db}->attr("dbh");
+    my $dbh = $self->{db}->attr("dbh");
 
     my $sth = $dbh->prepare( $sql );
 
