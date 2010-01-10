@@ -4,7 +4,7 @@ use 5.008;
 use DBI ":sql_types";
 use DBIx::CSSQuery::DB;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use Sub::Exporter -setup => {
     exports => [qw(db)]

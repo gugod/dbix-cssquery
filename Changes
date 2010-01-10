@@ -1,5 +1,9 @@
 Revision history for DBIx-CSSQuery
 
+0.02
+- Get it work with self.pm 0.32
+- add 'last' method.
+
 0.01  Sat Mar 22 00:25:19 2008
       Initial release.
 

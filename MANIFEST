@@ -1,5 +1,6 @@
 Changes
 inc/Module/Install.pm
+inc/Module/Install/AuthorTests.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm
 inc/Module/Install/Fetch.pm
@@ -12,12 +13,13 @@ lib/DBIx/CSSQuery/DB.pm
 Makefile.PL
 MANIFEST
 MANIFEST.SKIP
-META.yml			# Will be created by "make dist"
+META.yml
 README
 t/00.load.t
 t/01.read.t
-t/perlcritic.t
-t/pod-coverage.t
-t/pod.t
+t/02.special.t
 t/read.schema
 t/read.sqlite3
+xt/author/perlcritic.t
+xt/author/pod-coverage.t
+xt/author/pod.t
