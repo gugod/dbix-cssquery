@@ -1,5 +1,8 @@
 Revision history for DBIx-CSSQuery
 
+0.03
+- fix a stupid mistake
+
 0.02
 - Get it work with self.pm 0.32
 - add 'last' method.
