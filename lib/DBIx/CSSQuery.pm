@@ -32,7 +32,12 @@ use Sub::Exporter -setup => {
 use self;
 
 sub new {
-    return bless {}, $self;
+    return bless {
+        sql_params => {
+            order => "ORDER BY id ASC",
+            limit => undef
+        }
+    }, $self;
 }
 
 sub get {
@@ -70,6 +75,9 @@ sub size {
 }
 
 sub last {
+    $self->{sql_params}{order} =~ s/ASC/DESC/;
+    $self->{sql_params}{limit} = "0,1";
+    return $self;
 }
 
 sub each {
@@ -77,6 +85,7 @@ sub each {
     if (@args == 0) {
         return $self;
     }
+
     if (ref($args[0]) eq 'CODE') {
         $params{callback}= $args[0];
     }
@@ -88,6 +97,11 @@ sub each {
     return $self unless defined $cb;
 
     my $parsed = _parse_css_selector($self->{selector});
+
+    for(keys %{$self->{sql_params}}) {
+        $params{sql_params}{$_} = $self->{sql_params}{$_};
+    }
+
     my ($sql, $values) = _build_select_sql_statement($parsed, $params{sql_params});
 
     my $dbh = $self->{db}->attr("dbh");
@@ -135,7 +149,12 @@ sub _build_select_sql_statement {
 
     my $select = "SELECT * ";
     $select = "SELECT $params->{'select'} " if $params->{'select'};
-    return "${select}${from} ${where}${limit}", \@values;
+
+    my $order = "ORDER BY id ASC";
+    $order = " " . $params->{'order'} if $params->{'order'};
+
+    print "${select}${from} ${where} ${order} ${limit}\n";
+    return "${select}${from} ${where} ${order} ${limit}", \@values;
 }
 
 sub _parse_css_selector {
