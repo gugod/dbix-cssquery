@@ -152,7 +152,6 @@ sub _build_select_sql_statement {
     my $order = "ORDER BY id ASC";
     $order = " " . $params->{'order'} if $params->{'order'};
 
-    print "${select}${from} ${where} ${order} ${limit}\n";
     return "${select}${from} ${where} ${order} ${limit}", \@values;
 }
 
