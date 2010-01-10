@@ -14,26 +14,29 @@ package DBIx::CSSQuery;
 use Sub::Exporter -setup => {
     exports => [qw(db)]
 };
+
+{
+    my $db;
+    sub db {
+        my @args = @_;
+        $db = DBIx::CSSQuery->new() if !$db;
+
+        if (!$db->{db}) {
+            $db->{db} = DBIx::CSSQuery::DB->new();
+        }
+
+        return $db->{db} if !@args;
+        if ($args[0]) {
+            $db->{selector} = $args[0];
+        }
+        return $db;
+    }
+}
+
 use self;
 
 sub new {
     return bless {}, self;
-}
-
-{
-    my $self;
-    sub db {
-        $self = DBIx::CSSQuery->new() if !$self;
-        if (!$self->{db}) {
-            $self->{db} = DBIx::CSSQuery::DB->new();
-        }
-
-        return $self->{db} if !@_;
-        if ($_[0]) {
-            $self->{selector} = $_[0];
-        }
-        return $self;
-    }
 }
 
 sub get {
