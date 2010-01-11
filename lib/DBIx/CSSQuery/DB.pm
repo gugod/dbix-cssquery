@@ -8,13 +8,13 @@ our $VERSION = "0.01";
 use self;
 
 sub new {
-    return bless {}, self;
+    return bless {}, $self;
 }
 
 sub attr {
     my ($attr, $value) = args;
-    self->{$attr} = $value if defined $value;
-    return self->{$attr};
+    $self->{$attr} = $value if defined $value;
+    return $self->{$attr};
 }
 
 1;
@@ -37,9 +37,12 @@ DBIx::CSSQuery::DB - The database backend layer of DBIx::CSSQuery
 
 Create a new object.
 
-=item attr()
+=item attr($name [, $value])
 
-get/set object attributes.
+get/set one object attribute. The only used attribute is "dbh", which should be the return value of
+C<< DBI->connect >>, Use like
+
+    $db->attr(dbh => DBI->connect( $dsn, ... ));
 
 =back
 
@@ -49,7 +52,7 @@ Kang-min Liu  C<< <gugod@gugod.org> >>
 
 =head1 LICENCE AND COPYRIGHT
 
-Copyright (c) 2008, Kang-min Liu C<< <gugod@gugod.org> >>.
+Copyright (c) 2008, 2009, 2010 Kang-min Liu C<< <gugod@gugod.org> >>.
 
 This software is released under the MIT license cited below.
 
