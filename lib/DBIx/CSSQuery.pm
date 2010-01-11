@@ -21,8 +21,13 @@ use Sub::Exporter -setup => {
         }
 
         return $db->{db} if !@args;
+
         if ($args[0]) {
             $db->{selector} = $args[0];
+            $db->{sql_params} = {
+                order => "ORDER BY id ASC",
+                limit => undef
+            }
         }
         return $db;
     }
@@ -31,12 +36,7 @@ use Sub::Exporter -setup => {
 use self;
 
 sub new {
-    return bless {
-        sql_params => {
-            order => "ORDER BY id ASC",
-            limit => undef
-        }
-    }, $self;
+    return bless {}, $self;
 }
 
 sub get {
