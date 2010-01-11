@@ -55,6 +55,22 @@ sub get {
     return $record
 }
 
+sub insert {
+    my %fields = @args;
+    my $parsed = _parse_css_selector($self->{selector});
+    my $p = $parsed->[0];
+
+    my @fields = keys %fields;
+
+    local $"= ",";
+    my $sql = "INSERT INTO $p->{type} (@fields) VALUES (@{[ map {'?'} @fields ]})";
+    my $dbh = $self->{db}->attr("dbh");
+    my $sth = $dbh->prepare($sql);
+    my $rv  = $sth->execute(map { $fields{$_} } @fields);
+
+    return $self;
+}
+
 sub size {
     my $parsed = _parse_css_selector($self->{selector});
     my ($sql, $values) = _build_select_sql_statement($parsed, {

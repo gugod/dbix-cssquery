@@ -31,7 +31,18 @@ db("posts[id=1]")->each(
 }
 
 {
-    is( db("posts")->size, 3);
+    my $size = sub {
+        my $sth = $dbh->prepare("SELECT count(*) FROM posts");
+        $sth->execute;
+        return $sth->fetchrow_arrayref()->[0];
+    }->();
+
+    my @all_ids = sub {
+        my $ids = $dbh->selectall_arrayref("SELECT id FROM posts");
+        return sort map { $_->[0] } @$ids;
+    }->();
+
+    is( db("posts")->size, $size);
 
     my @ids = ();
     db("posts")->each(
@@ -41,5 +52,5 @@ db("posts[id=1]")->each(
         }
     );
     @ids = sort @ids;
-    is_deeply( [1,2,3], \@ids );
+    is_deeply(\@ids, \@all_ids );
 }
