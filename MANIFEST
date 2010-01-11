@@ -9,15 +9,17 @@ inc/Module/Install/Metadata.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 lib/DBIx/CSSQuery.pm
+lib/DBIx/CSSQuery/Collection.pm
 lib/DBIx/CSSQuery/DB.pm
 Makefile.PL
-MANIFEST
+MANIFEST			This list of files
 MANIFEST.SKIP
 META.yml
 README
 t/00.load.t
 t/01.read.t
 t/02.special.t
+t/03.insert.t
 t/read.schema
 t/read.sqlite3
 xt/author/perlcritic.t

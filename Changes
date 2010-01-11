@@ -1,5 +1,9 @@
 Revision history for DBIx-CSSQuery
 
+0.04
+- Add 'insert' method
+- Re-organize methods under proper classes.
+
 0.03
 - fix a stupid mistake
 
