@@ -1,8 +1,8 @@
 package DBIx::CSSQuery;
 use strict;
 use 5.008;
-use DBI ":sql_types";
-use DBIx::CSSQuery::DB;
+
+use DBIx::CSSQuery::Collection;
 
 our $VERSION = '0.03';
 
@@ -14,11 +14,7 @@ use Sub::Exporter -setup => {
     my $db;
     sub db {
         my @args = @_;
-        $db = DBIx::CSSQuery->new() if !$db;
-
-        if (!$db->{db}) {
-            $db->{db} = DBIx::CSSQuery::DB->new();
-        }
+        $db ||= DBIx::CSSQuery::Collection->new();
 
         return $db->{db} if !@args;
 
@@ -33,183 +29,8 @@ use Sub::Exporter -setup => {
     }
 }
 
-use self;
-
-sub new {
-    return bless {}, $self;
-}
-
-sub get {
-    my ($index) = @args;
-    my $record;
-
-    $self->each(
-        sql_params => {
-            limit => "$index,1"
-        },
-        callback => sub {
-            $record = $_[0]
-        }
-    );
-
-    return $record
-}
-
-sub insert {
-    my %fields = @args;
-    my $parsed = _parse_css_selector($self->{selector});
-    my $p = $parsed->[0];
-
-    my @fields = keys %fields;
-
-    local $"= ",";
-    my $sql = "INSERT INTO $p->{type} (@fields) VALUES (@{[ map {'?'} @fields ]})";
-    my $dbh = $self->{db}->attr("dbh");
-    my $sth = $dbh->prepare($sql);
-    my $rv  = $sth->execute(map { $fields{$_} } @fields);
-
-    return $self;
-}
-
-sub size {
-    my $parsed = _parse_css_selector($self->{selector});
-    my ($sql, $values) = _build_select_sql_statement($parsed, {
-        select => "count(*)"
-    });
-    my $dbh = $self->{db}->attr("dbh");
-
-    my $sth = $dbh->prepare( $sql );
-    for my $i (0 .. $#{$values} ) {
-        my $v = $values->[$i];
-        $sth->bind_param($i+1, $v->[0], $v->[1]);
-    }
-
-    $sth->execute;
-    my $record = $sth->fetchrow_hashref;
-    return $record->{'count(*)'};
-}
-
-sub last {
-    $self->{sql_params}{order} =~ s/ASC/DESC/;
-    $self->{sql_params}{limit} = "0,1";
-    return $self;
-}
-
-sub each {
-    my %params;
-    if (@args == 0) {
-        return $self;
-    }
-
-    if (ref($args[0]) eq 'CODE') {
-        $params{callback}= $args[0];
-    }
-    else {
-        %params = @args;
-    }
-
-    my $cb = $params{callback};
-    return $self unless defined $cb;
-
-    my $parsed = _parse_css_selector($self->{selector});
-
-    for(keys %{$self->{sql_params}}) {
-        $params{sql_params}{$_} = $self->{sql_params}{$_};
-    }
-
-    my ($sql, $values) = _build_select_sql_statement($parsed, $params{sql_params});
-
-    my $dbh = $self->{db}->attr("dbh");
-
-    my $sth = $dbh->prepare( $sql );
-
-    for my $i (0 .. $#{$values} ) {
-        my $v = $values->[$i];
-        $sth->bind_param($i+1, $v->[0], $v->[1]);
-    }
-
-    $sth->execute;
-    while (my $record = $sth->fetchrow_hashref) {
-        $cb->($record);
-    }
-
-    return $self;
-}
-
-sub _build_select_sql_statement {
-    my ($parsed, $params) = @_;
-
-    my $p = $parsed->[0];
-
-    my @values = ();
-
-    my $from  = " FROM $p->{type} ";
-    my $where = "";
-    if ($p->{attribute} =~ m/ \[ (.+) = (.+) \] /x ) {
-        $where = " WHERE ";
-        my $field = $1;
-        my $val = $2;
-
-        $where .= "$field = ?";
-        my $type = SQL_INTEGER;
-        if ($val =~ /^'(.+)'$/) {
-            $val = $1;
-            $type = SQL_VARCHAR;
-        }
-        push @values, [$val, SQL_INTEGER];
-    }
-
-    $params = {} if !defined($params);
-    my $limit = defined($params->{limit}) ? " LIMIT $params->{limit}" : "";
-
-    my $select = "SELECT * ";
-    $select = "SELECT $params->{'select'} " if $params->{'select'};
-
-    my $order = "ORDER BY id ASC";
-    $order = " " . $params->{'order'} if $params->{'order'};
-
-    return "${select}${from} ${where} ${order} ${limit}", \@values;
-}
-
-sub _parse_css_selector {
-    my $selector = shift;
-    my @sel =
-        map { _parse_simple_css_selector($_) }
-        split(/ /, $selector);
-    return \@sel;
-}
-
-sub _parse_simple_css_selector {
-    my $selector = shift;
-    my $word = qr/[_a-z0-9]+/o;
-    my $parsed = {
-        type => "",
-        class => "",
-        id => "",
-        attribute => "",
-        special => ""
-    };
-
-    $selector =~ m{^(\*|$word)};
-    $parsed->{type} = $1;
-
-    while ( $selector =~ m{
-                              \G
-                              ( \#$word ) |                # ID
-                              ( (?:\[ .+ \] )+ ) |         # attribute
-                              ( (?:\.$word  )+ ) |         # class names
-                              ( (?::$word(?: \(.+\))?)+ )  # special
-                      }gx) {
-        $parsed->{id} .= $1 ||"";
-        $parsed->{attribute} .= $2 ||"";
-        $parsed->{class} .= $3 ||"";
-        $parsed->{special} .= $4 ||"";
-    }
-
-    return $parsed;
-}
-
 1;
+
 __END__
 
 =head1 NAME
@@ -218,7 +39,7 @@ DBIx::CSSQuery - A Perl DBI extension module to let you fetch data with CSS quer
 
 =head1 VERSION
 
-This document describes DBIx::CSSQuery version 0.0.1
+This document describes DBIx::CSSQuery version 0.03
 
 =head1 SYNOPSIS
 
@@ -238,14 +59,15 @@ This document describes DBIx::CSSQuery version 0.0.1
 
 =head1 DESCRIPTION
 
-
 DBIx::CSSQuery is, currently, a proof of concept for what can be done
 with CSS query. For example, here's how you retrieve a collection of
-all records from table "posts":
+a collection of records from table "posts":
 
     db("posts")
 
-Also, here's how to iterate over a collection:
+The return value of such expression is an instance of L<DBIx::CSSQuery::Collection>.
+
+Here's how to iterate over thath collection:
 
     db("posts")->each(sub {
         my $item = shift;
@@ -281,35 +103,17 @@ query:
 
     SELECT * FROM posts WHERE id = 1;
 
+Except that it is not executing this sql statement right away, but wait
+until it is really required. Laziness is an important virtue in this module.
+
 At this point, if the column type is string, it needs to be
 single-quoted, like C<posts[subject='hi']>. If it's integer, it must
 not be quoted, like the example above. Hopefully this can be
 automatically detected on the backend so the selector syntax an be
 less strict.
 
-=item new()
-
-Object constructor. However, you should use the exported C<db>
-function instead.
-
-=item get( $index )
-
-Retrieve a single record from the retrieved collection. Returns a hash.
-The value of C<$index> starts from zero.
-
-=item size
-
-Return the total number of records in the current collection.
-
-=item last
-
-Narrow the current collection to contain only the last record. The return
-value is stiall collection that you will need to call 'each' or 'get' the o
-
-=item each( $callback )
-
-Iterate over the collection. for each record, C<$callback> is called
-with the record passed in as its first argument.
+This function returns an object of L<DBIx::CSSQuery::Collection>, from which
+you will manipulate yout retrieved data set.
 
 =back
 
